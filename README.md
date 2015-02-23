@@ -14,5 +14,6 @@
   
   5.If the security warning appears uncheck "Always ask before opening this file" otherwise you are going to get this message for each dll, and you do not want that ;)
   
+  6.Wait until it has finished
   
-  Enjoy!
+  7.Enjoy the x64 version
