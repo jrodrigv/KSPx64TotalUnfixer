@@ -17,3 +17,7 @@
   6.Wait until it has finished
   
   7.Enjoy the x64 version
+  
+License
+-------
+KSPx64TotalUnfixer is in the public domain.
