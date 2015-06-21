@@ -1,14 +1,14 @@
-﻿
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using GalaSoft.MvvmLight.Threading;
+using KSPx64TotalUnfixer.Core;
 using Microsoft.WindowsAPICodePack.Dialogs;
-namespace KSPx64TotalUnfixer.ViewModel
+
+namespace KSPx64TotalUnfixer.UI.ViewModel
 {
     /// <summary>
     /// This class contains properties that the main View can data bind to.
@@ -82,9 +82,9 @@ namespace KSPx64TotalUnfixer.ViewModel
         private void RunUnfixer()
         {
             // Create list of dlls to unfix
-          
-            var paths = Directory.GetFiles(_gameDataPath, "*.dll", SearchOption.AllDirectories).ToList();
 
+            var paths = new List<string>();
+           
             DispatcherHelper.CheckBeginInvokeOnUI(() =>
             {
                 NumberOfDlls = paths.Count;
@@ -102,15 +102,17 @@ namespace KSPx64TotalUnfixer.ViewModel
                 startinfo.Arguments = "\"" + path + "\"";
                 var unfixerProcess = Process.Start(startinfo);
                 if (unfixerProcess != null) unfixerProcess.WaitForExit();
-                
+
                 DispatcherHelper.CheckBeginInvokeOnUI(() =>
                 {
                     FilesProcessed++;
                 });
 
             }
-            
+
         }
+
+       
 
         private void UnfixerRunAsyncTask()
         {

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using GalaSoft.MvvmLight.Threading;
 
-namespace KSPx64TotalUnfixer
+namespace KSPx64TotalUnfixer.UI
 {
     /// <summary>
     /// Interaction logic for App.xaml

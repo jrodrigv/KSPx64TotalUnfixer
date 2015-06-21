@@ -1,7 +1,7 @@
 ﻿using System.Windows;
-using KSPx64TotalUnfixer.ViewModel;
+using KSPx64TotalUnfixer.UI.ViewModel;
 
-namespace KSPx64TotalUnfixer
+namespace KSPx64TotalUnfixer.UI
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

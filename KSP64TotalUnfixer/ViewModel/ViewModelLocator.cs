@@ -12,7 +12,7 @@
 using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
 
-namespace KSPx64TotalUnfixer.ViewModel
+namespace KSPx64TotalUnfixer.UI.ViewModel
 {
     /// <summary>
     /// This class contains static references to all the view models in the
