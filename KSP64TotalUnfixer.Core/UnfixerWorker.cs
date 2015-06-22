@@ -8,22 +8,49 @@ using Mono.Cecil.Cil;
 
 namespace KSPx64TotalUnfixer.Core
 {
+    public enum UnfixState
+    {
+        NotProcessed,
+        Unfixed,
+        Unnecessary,
+        Error
+    }
     public class UnfixerWorker
     {
-        public Queue<string> QueueToProcess { get; set; }
-        public Dictionary<string, string> Results { get; set; }
-        public string KspPath { get; set; }
+        public static Queue<String> DllsToUnfixQueue = new Queue<string>(); 
+        public static Dictionary<string, UnfixState> UnfixingResultsDictionary = new Dictionary<string, UnfixState>();
+        public static string KspPath;
 
+
+        public UnfixerWorker()
+        {
+            
+        }
+        public static void Setup(string kspPath)
+        {
+            UnfixerWorker.DllsToUnfixQueue.Clear();
+            UnfixerWorker.UnfixingResultsDictionary.Clear();
+
+            UnfixerWorker.KspPath = kspPath;
+
+            var gameDataPath = Path.Combine(kspPath, @"GameData");
+           
+            foreach (var dir in Directory.GetFiles(gameDataPath, "*.dll", SearchOption.AllDirectories))
+            {
+                UnfixerWorker.DllsToUnfixQueue.Enqueue(dir);
+                UnfixerWorker.UnfixingResultsDictionary.Add(dir,UnfixState.NotProcessed);
+            }
+        }
         public Task StartUnfixing()
         {
             return Task.Run(() =>
             {
-                while (QueueToProcess.Count > 0)
+                while (DllsToUnfixQueue.Count > 0)
                 { 
                     var dllToUnfix = "";
-                    lock (QueueToProcess)
+                    lock (DllsToUnfixQueue)
                     {
-                        dllToUnfix = QueueToProcess.Dequeue();
+                        dllToUnfix = DllsToUnfixQueue.Dequeue();
                     }
 
                     var resolver = new DefaultAssemblyResolver();
@@ -83,19 +110,21 @@ namespace KSPx64TotalUnfixer.Core
                         if (updatedType)
                         {
                             assembly.Write(dllToUnfix);
-                            Results[dllToUnfix] = "Unfixed";
+                            UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
                         }
                         else
                         {
-                            Results[dllToUnfix] = "Nothing to change";
+                            UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unnecessary;
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        Results[dllToUnfix] = ex.Message;
+                        UnfixingResultsDictionary[dllToUnfix] = UnfixState.Error;
                     }
                 }
             });
         }
+
+       
     }
 }

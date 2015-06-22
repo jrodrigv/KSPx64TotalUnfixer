@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using KSPx64TotalUnfixer.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,41 +20,64 @@ namespace KSP64TotalUnfixer.Core.Tests
         }
 
         [TestMethod]
-        public void UnfixSuccesfull()
+        public void UnfixRoSuccesfully()
         {
-            //Setup
-            SetupFolders();
-            Utilities.SetupDllsFromPath(Path.Combine(KspTestPath,@"GameData"));
-            
             //Arrange
-            var unfixerWorker = new UnfixerWorker()
-            {   QueueToProcess = Utilities.DllsToUnfixQueue,
-                Results = Utilities.UnfixingResultsDictionary,
-                KspPath = KspTestPath};
-
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var unfixerWorker = new UnfixerWorker();
         
-            //Act 1
+            //Act 
             var taskFirtPass = unfixerWorker.StartUnfixing();
             taskFirtPass.Wait();
-            var firstPassCount = Utilities.UnfixingResultsDictionary.Values.Count(x => x == "Unfixed");
-
-          
-
-            //Arrange 2
-            Utilities.SetupDllsFromPath(Path.Combine(KspTestPath, @"GameData"));
-            unfixerWorker = new UnfixerWorker()
-            {
-                QueueToProcess = Utilities.DllsToUnfixQueue,
-                Results = Utilities.UnfixingResultsDictionary,
-                KspPath = KspTestPath
-            };
-            //Act2
+            var firstPassCount = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
+            UnfixerWorker.Setup(KspTestPath);
             var taskSecondPass   = unfixerWorker.StartUnfixing();
             taskSecondPass.Wait();
-            var secondPassCount = Utilities.UnfixingResultsDictionary.Values.Count(x => x == "Unfixed");
+            var secondPassCount = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
 
             //Assert
             Assert.IsTrue(firstPassCount >= 1 && secondPassCount == 0);
+        }
+
+        [TestMethod]
+        public void MultiWorkersUnfixSuccesfully()
+        {
+            //Arrange
+            var logicalCores = Environment.ProcessorCount;
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var monoUnfixerWorker = new UnfixerWorker();
+
+            var timeBeforeExecuteMono = DateTime.Now;
+            var taskFirtPass = monoUnfixerWorker.StartUnfixing();
+            taskFirtPass.Wait();
+            var monoTime = DateTime.Now.Subtract(timeBeforeExecuteMono).TotalMilliseconds;
+
+            var monoPassCount = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
+
+
+            //Act
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var unfixerWorkers = new UnfixerWorker [logicalCores];
+            var unfixerTasks = new Task[logicalCores];
+
+            var timeBeforeExecuteMulti = DateTime.Now;
+            for (var i = 0; i < logicalCores; i++)
+            {
+                unfixerWorkers[i] = new UnfixerWorker();
+                unfixerTasks[i] = unfixerWorkers[i].StartUnfixing();
+            }
+
+            Task.WaitAll(unfixerTasks);
+            var multiTime = DateTime.Now.Subtract(timeBeforeExecuteMulti).TotalMilliseconds;
+
+            var multiPassCount = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
+
+            //Assert
+            Assert.AreEqual(monoPassCount,multiPassCount,"Error: multi count = "+multiPassCount+" != mono count= "+monoPassCount);
+            Assert.IsTrue(multiTime < monoTime ,"Error: Multi Time = "+multiTime+" > Mono time = "+monoTime);
         }
     }
 }

@@ -7,19 +7,6 @@ namespace KSPx64TotalUnfixer.Core
 {
     public static class Utilities
     {
-        public static Queue<String> DllsToUnfixQueue = new Queue<string>(); 
-        public static Dictionary<String,String> UnfixingResultsDictionary = new Dictionary<string, string>();
-        public  static void SetupDllsFromPath(String path)
-        {
-            DllsToUnfixQueue.Clear();
-            UnfixingResultsDictionary.Clear();
-            foreach (var dir in Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories))
-            {
-               DllsToUnfixQueue.Enqueue(dir);
-               UnfixingResultsDictionary.Add(dir,"");
-            }
-
-        }
         public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.
