@@ -18,7 +18,11 @@ namespace KSP64TotalUnfixer.Core.Tests
              Directory.Delete(String.Concat(KspTestPath,"\\GameData"), recursive:true);
              Utilities.DirectoryCopy(String.Concat(KspTestPath, "\\GameData_BK"), String.Concat(KspTestPath, "\\GameData"),true);
         }
-
+        private void SetupFoldersHard()
+        {
+            Directory.Delete(String.Concat(KspTestPath, "\\GameData"), recursive: true);
+            Utilities.DirectoryCopy(String.Concat(KspTestPath, "\\GameData_BK_HARD"), String.Concat(KspTestPath, "\\GameData"), true);
+        }
         [TestMethod]
         public void UnfixRoSuccesfully()
         {
@@ -28,18 +32,18 @@ namespace KSP64TotalUnfixer.Core.Tests
             var unfixerWorker = new UnfixerWorker();
         
             //Act 
-            var taskFirtPass = unfixerWorker.StartUnfixing();
+            var taskFirtPass = unfixerWorker.StartUnfixing(null);
             taskFirtPass.Wait();
             var firstPassCount = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
             UnfixerWorker.Setup(KspTestPath);
-            var taskSecondPass   = unfixerWorker.StartUnfixing();
+            var taskSecondPass   = unfixerWorker.StartUnfixing(null);
             taskSecondPass.Wait();
             var secondPassCount = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
 
             //Assert
             Assert.IsTrue(firstPassCount >= 1 && secondPassCount == 0);
         }
-
+        
         [TestMethod]
         public void MultiWorkersUnfixSuccesfully()
         {
@@ -50,7 +54,7 @@ namespace KSP64TotalUnfixer.Core.Tests
             var monoUnfixerWorker = new UnfixerWorker();
 
             var timeBeforeExecuteMono = DateTime.Now;
-            var taskFirtPass = monoUnfixerWorker.StartUnfixing();
+            var taskFirtPass = monoUnfixerWorker.StartUnfixing(null);
             taskFirtPass.Wait();
             var monoTime = DateTime.Now.Subtract(timeBeforeExecuteMono).TotalMilliseconds;
 
@@ -67,7 +71,7 @@ namespace KSP64TotalUnfixer.Core.Tests
             for (var i = 0; i < logicalCores; i++)
             {
                 unfixerWorkers[i] = new UnfixerWorker();
-                unfixerTasks[i] = unfixerWorkers[i].StartUnfixing();
+                unfixerTasks[i] = unfixerWorkers[i].StartUnfixing(null);
             }
 
             Task.WaitAll(unfixerTasks);

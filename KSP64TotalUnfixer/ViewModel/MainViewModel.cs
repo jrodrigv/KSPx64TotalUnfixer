@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using GalaSoft.MvvmLight;
@@ -18,14 +20,10 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
-        
         private string _gameDataPath = string.Empty;
         private int _numberOfDlls;
         private int _filesProcessed;
     
-
-      
-
         public string GameDataPath
         {
             get 
@@ -55,10 +53,7 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
             set { Set(() => FilesProcessed, ref _filesProcessed, value); }
         }
 
-        public static string Instructions
-        {
-            get { return "Please select the GAMEDATA folder that you want to enable for x64 (WARNING: take a backup first)"; }
-        }
+        public static string Instructions => "Please select the GAMEDATA folder that you want to enable for x64 (WARNING: take a backup first)";
 
 
         /// <summary>
@@ -81,47 +76,78 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
 
         private void RunUnfixer()
         {
-            // Create list of dlls to unfix
-
-            var paths = new List<string>();
-           
+      
+            var logicalCores = Environment.ProcessorCount;
+            UnfixerWorker.Setup(Directory.GetParent(GameDataPath).ToString());
             DispatcherHelper.CheckBeginInvokeOnUI(() =>
             {
-                NumberOfDlls = paths.Count;
+                NumberOfDlls = UnfixerWorker.DllsToUnfixQueue.Count;
                 FilesProcessed = 0;
             });
 
-            var startinfo = new ProcessStartInfo("x64-unfixer.exe")
+            var unfixerWorkers = new UnfixerWorker[logicalCores];
+            var unfixerTasks = new Task[logicalCores];
+
+          
+            for (var i = 0; i < logicalCores; i++)
             {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = false
-            };
-
-            foreach (var path in paths)
-            {
-                startinfo.Arguments = "\"" + path + "\"";
-                var unfixerProcess = Process.Start(startinfo);
-                if (unfixerProcess != null) unfixerProcess.WaitForExit();
-
-                DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                {
-                    FilesProcessed++;
-                });
-
+                unfixerWorkers[i] = new UnfixerWorker();
+                unfixerTasks[i] = unfixerWorkers[i].StartUnfixing(IncrementProgress);
             }
+           
+            Task.WaitAll(unfixerTasks);
 
         }
 
-       
+        public void IncrementProgress()
+        {
+            DispatcherHelper.CheckBeginInvokeOnUI(() =>
+            {
+                FilesProcessed++;
+            });
+        }
 
         private void UnfixerRunAsyncTask()
         {
-           Task.Run(() => RunUnfixer()).ContinueWith(tsk =>
-           {
-               MessageBox.Show("Process completed: enjoy you KSP x64!", "Process completed");
-           });
+            try
+            {
+                if (ValidatePaths())
+                {
+                    Task.Run(() => RunUnfixer()).ContinueWith(tsk =>
+                    {
+                        MessageBox.Show(GetResultsSummary(), "Process completed");
+                    });
+                }
+                else
+                {
+                    MessageBox.Show("Error: KSP.exe not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
+        private string GetResultsSummary()
+        {
+            var s = new StringBuilder();
+            s.AppendLine("Process completed: enjoy you KSP x64!");
+            s.AppendLine("");
+            s.AppendLine("Unfixed DLLs:");
+            s.AppendLine("--------------------");
+            foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.Unfixed))
+            {
+                s.AppendLine(dll.Key);
+            }
+            s.AppendLine("--------------------");
+
+            return s.ToString();
+        }
+        private bool ValidatePaths()
+        {
+            return Directory.GetFiles(Directory.GetParent(GameDataPath).ToString(), "KSP.exe").Count() == 1;
+        }
   
 
         private void DisplayFolderBrowserDialog()

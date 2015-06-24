@@ -9,7 +9,7 @@
         Width="500"
         MinWidth="500"
         MinHeight="300"
-        Title="KSP64TotalUnfixer"
+        Title="KSP64TotalUnfixer 1.0.1"
         DataContext="{Binding Main, Source={StaticResource Locator}}" Icon="KSPx64TotalUnfixer_ico.ico">
 
     <Window.Resources>

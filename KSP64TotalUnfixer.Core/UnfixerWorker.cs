@@ -22,32 +22,28 @@ namespace KSPx64TotalUnfixer.Core
         public static string KspPath;
 
 
-        public UnfixerWorker()
-        {
-            
-        }
         public static void Setup(string kspPath)
         {
-            UnfixerWorker.DllsToUnfixQueue.Clear();
-            UnfixerWorker.UnfixingResultsDictionary.Clear();
+            DllsToUnfixQueue.Clear();
+            UnfixingResultsDictionary.Clear();
 
-            UnfixerWorker.KspPath = kspPath;
+            KspPath = kspPath;
 
             var gameDataPath = Path.Combine(kspPath, @"GameData");
            
             foreach (var dir in Directory.GetFiles(gameDataPath, "*.dll", SearchOption.AllDirectories))
             {
-                UnfixerWorker.DllsToUnfixQueue.Enqueue(dir);
-                UnfixerWorker.UnfixingResultsDictionary.Add(dir,UnfixState.NotProcessed);
+                DllsToUnfixQueue.Enqueue(dir);
+                UnfixingResultsDictionary.Add(dir,UnfixState.NotProcessed);
             }
         }
-        public Task StartUnfixing()
+        public Task StartUnfixing(Action incrementProgress)
         {
             return Task.Run(() =>
             {
                 while (DllsToUnfixQueue.Count > 0)
                 { 
-                    var dllToUnfix = "";
+                    string dllToUnfix;
                     lock (DllsToUnfixQueue)
                     {
                         dllToUnfix = DllsToUnfixQueue.Dequeue();
@@ -62,52 +58,7 @@ namespace KSPx64TotalUnfixer.Core
 
                         var assembly = AssemblyDefinition.ReadAssembly(dllToUnfix, rParam);
 
-                        var updatedType = false;
-
-                        // Iterate through every single type in the module.
-                        foreach (var td in assembly.MainModule.Types)
-                        {
-
-                            var updatedMethod = false;
-
-                            if (!td.IsClass)
-                                continue;
-
-                            // Iterate through every single method in the type.
-                            // This includes constructors, property implementors, etc.
-                            foreach (var md in td.Methods)
-                            {
-                                if (!md.HasBody)
-                                    continue;
-
-                                var ilp = md.Body.GetILProcessor();
-                                var toReplace = new List<Instruction>();
-
-                                foreach (
-                                    var fe in
-                                        ilp.Body.Instructions.Where(
-                                            fe =>
-                                                (fe.OpCode == OpCodes.Call) && (fe.Operand != null) &&
-                                                (((MethodReference) fe.Operand).Name == "get_Size") &&
-                                                (((MethodReference) fe.Operand).DeclaringType != null) &&
-                                                (((MethodReference) fe.Operand).DeclaringType.FullName ==
-                                                 "System.IntPtr")))
-                                {
-                                    toReplace.Add(fe);
-                                    assembly.MainModule.Import(md);
-                                    updatedMethod = true;
-                                }
-
-                                foreach (var fe in toReplace)
-                                    ilp.Replace(fe, Instruction.Create(OpCodes.Ldc_I4_4));
-                            }
-
-                            if (!updatedMethod) continue;
-                            assembly.MainModule.Import(td);
-                            updatedType = true;
-                        }
-
-                        if (updatedType)
+                        if (ApplyStandardUnfix(assembly))
                         {
                             assembly.Write(dllToUnfix);
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
@@ -116,6 +67,7 @@ namespace KSPx64TotalUnfixer.Core
                         {
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unnecessary;
                         }
+                        incrementProgress?.Invoke();
                     }
                     catch (Exception)
                     {
@@ -123,6 +75,54 @@ namespace KSPx64TotalUnfixer.Core
                     }
                 }
             });
+        }
+
+
+        private bool ApplyStandardUnfix(AssemblyDefinition assembly)
+        {
+            var updatedType = false;
+            // Iterate through every single type in the module.
+            foreach (var td in assembly.MainModule.Types)
+            {
+                var updatedMethod = false;
+
+                if (!td.IsClass)
+                    continue;
+
+                // Iterate through every single method in the type.
+                // This includes constructors, property implementors, etc.
+                foreach (var md in td.Methods)
+                {
+                    if (!md.HasBody)
+                        continue;
+
+                    var ilp = md.Body.GetILProcessor();
+                    var toReplace = new List<Instruction>();
+
+                    foreach (
+                        var fe in
+                            ilp.Body.Instructions.Where(
+                                fe =>
+                                    (fe.OpCode == OpCodes.Call) && (fe.Operand != null) &&
+                                    (((MethodReference) fe.Operand).Name == "get_Size") &&
+                                    (((MethodReference) fe.Operand).DeclaringType != null) &&
+                                    (((MethodReference) fe.Operand).DeclaringType.FullName ==
+                                     "System.IntPtr")))
+                    {
+                        toReplace.Add(fe);
+                        assembly.MainModule.Import(md);
+                        updatedMethod = true;
+                    }
+
+                    foreach (var fe in toReplace)
+                        ilp.Replace(fe, Instruction.Create(OpCodes.Ldc_I4_4));
+                }
+
+                if (!updatedMethod) continue;
+                assembly.MainModule.Import(td);
+                updatedType = true;
+            }
+            return updatedType;
         }
 
        
