@@ -12,11 +12,9 @@
   
   4.Click on Unfix
   
-  5.If the security warning appears uncheck "Always ask before opening this file" otherwise you are going to get this message for each dll, and you do not want that ;)
+  5.Wait until it has finished
   
-  6.Wait until it has finished
-  
-  7.Enjoy the x64 version
+  6.Enjoy the x64 version
   
 License
 -------
