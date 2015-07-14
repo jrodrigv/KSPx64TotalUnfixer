@@ -63,6 +63,11 @@ namespace KSPx64TotalUnfixer.Core
                             assembly.Write(dllToUnfix);
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
                         }
+                        else if(ApplyLevel2Unfix(assembly))
+                        {
+                            assembly.Write(dllToUnfix);
+                            UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
+                        }
                         else
                         {
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unnecessary;
@@ -125,6 +130,57 @@ namespace KSPx64TotalUnfixer.Core
             return updatedType;
         }
 
-       
+
+        private bool ApplyLevel2Unfix(AssemblyDefinition assembly)
+        {
+            var updatedType = false;
+            // Iterate through every single type in the module.
+            foreach (var td in assembly.MainModule.Types)
+            {
+                var updatedMethod = false;
+
+                if (!td.IsClass)
+                    continue;
+                
+                // Iterate through every single method in the type.
+                // This includes constructors, property implementors, etc.
+                foreach (var md in td.Methods)
+                {
+                  
+
+                    if (!md.HasBody)
+                        continue;
+
+                    var ilp = md.Body.GetILProcessor();
+                    var toReplace = new List<Instruction>();
+
+                    foreach (
+                        var fe in
+                            ilp.Body.Instructions.Where(
+                                fe =>
+                                    (fe.OpCode == OpCodes.Ldc_I8) && 
+                                    (fe.Operand.Equals(9223372036854775807))))
+                    {
+                        if(fe.Previous.OpCode.Name == "call" && 
+                            ((MethodReference)fe.Previous.Operand).FullName.Contains("System.IntPtr::ToInt64()"))
+                        {
+                             toReplace.Add(fe);
+                             assembly.MainModule.Import(md);
+                             updatedMethod = true;
+                        }
+                       
+                    }
+
+                    foreach (var fe in toReplace)
+                        ilp.Replace(fe, Instruction.Create(OpCodes.Ldc_I4_4));
+                }
+
+                if (!updatedMethod) continue;
+                assembly.MainModule.Import(td);
+                updatedType = true;
+            }
+            return updatedType;
+        }
+
     }
 }

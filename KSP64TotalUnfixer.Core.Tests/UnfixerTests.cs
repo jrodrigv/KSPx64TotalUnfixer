@@ -11,18 +11,16 @@ namespace KSP64TotalUnfixer.Core.Tests
     [TestClass]
     public class UnfixerTests
     {
-        public const string KspTestPath = "E:\\Steam\\SteamApps\\common\\Kerbal Space Program - test";
+        public const string KspTestPath = @"C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program";
 
         private void SetupFolders()
         {
              Directory.Delete(String.Concat(KspTestPath,"\\GameData"), recursive:true);
              Utilities.DirectoryCopy(String.Concat(KspTestPath, "\\GameData_BK"), String.Concat(KspTestPath, "\\GameData"),true);
         }
-        private void SetupFoldersHard()
-        {
-            Directory.Delete(String.Concat(KspTestPath, "\\GameData"), recursive: true);
-            Utilities.DirectoryCopy(String.Concat(KspTestPath, "\\GameData_BK_HARD"), String.Concat(KspTestPath, "\\GameData"), true);
-        }
+       
+
+
         [TestMethod]
         public void UnfixRoSuccesfully()
         {
