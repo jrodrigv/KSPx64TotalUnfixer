@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 
 namespace KSPx64TotalUnfixer.Core
@@ -39,6 +41,11 @@ namespace KSPx64TotalUnfixer.Core
                 var temppath = Path.Combine(destDirName, subdir.Name);
                 DirectoryCopy(subdir.FullName, temppath, true);
             }
+        }
+
+        public static List<string> ReadListFromFile(string filePath)
+        {
+            return File.ReadLines(filePath).ToList();
         }
     }
 }

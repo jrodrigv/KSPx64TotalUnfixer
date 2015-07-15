@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using KSPx64TotalUnfixer.Core.Properties;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -20,40 +21,49 @@ namespace KSPx64TotalUnfixer.Core
         public static Queue<String> DllsToUnfixQueue = new Queue<string>(); 
         public static Dictionary<string, UnfixState> UnfixingResultsDictionary = new Dictionary<string, UnfixState>();
         public static string KspPath;
-
+        public static List<string> WhiteList  = new List<string>();
 
         public static void Setup(string kspPath)
         {
             DllsToUnfixQueue.Clear();
             UnfixingResultsDictionary.Clear();
+            WhiteList.Clear();
+
+            WhiteList = Utilities.ReadListFromFile(Resources.WhiteList);
 
             KspPath = kspPath;
 
-            var gameDataPath = Path.Combine(kspPath, @"GameData");
+            var gameDataPath = Path.Combine(kspPath, Resources.GameData);
            
-            foreach (var dir in Directory.GetFiles(gameDataPath, "*.dll", SearchOption.AllDirectories))
+            foreach (var dir in Directory.GetFiles(gameDataPath, Resources.AllDlls, SearchOption.AllDirectories))
             {
-                DllsToUnfixQueue.Enqueue(dir);
                 UnfixingResultsDictionary.Add(dir,UnfixState.NotProcessed);
             }
+
+            foreach (var dir in UnfixingResultsDictionary.Keys.Where( x => !WhiteList.Contains(Path.GetFileName(x))))
+            {
+                 DllsToUnfixQueue.Enqueue(dir);
+            }   
         }
         public Task StartUnfixing(Action incrementProgress)
         {
             return Task.Run(() =>
             {
                 while (DllsToUnfixQueue.Count > 0)
-                { 
+                {
+
                     string dllToUnfix;
                     lock (DllsToUnfixQueue)
                     {
-                        dllToUnfix = DllsToUnfixQueue.Dequeue();
+                       dllToUnfix = DllsToUnfixQueue.Dequeue();
                     }
+                    try
+                    {
+                        
 
-                    var resolver = new DefaultAssemblyResolver();
-                    resolver.AddSearchDirectory(Path.Combine(KspPath, @"KSP_Data\Managed"));
-
-                   
-                        var rParam = new ReaderParameters(ReadingMode.Immediate) {AssemblyResolver = resolver};
+                        var resolver = new DefaultAssemblyResolver();
+                        resolver.AddSearchDirectory(Path.Combine(KspPath, @"KSP_Data\Managed"));
+                        var rParam = new ReaderParameters(ReadingMode.Immediate) { AssemblyResolver = resolver };
 
                         var assembly = AssemblyDefinition.ReadAssembly(dllToUnfix, rParam);
 
@@ -62,7 +72,7 @@ namespace KSPx64TotalUnfixer.Core
                             assembly.Write(dllToUnfix);
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
                         }
-                        else if(ApplyLevel2Unfix(assembly))
+                        else if (ApplyLevel2Unfix(assembly))
                         {
                             assembly.Write(dllToUnfix);
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
@@ -72,6 +82,12 @@ namespace KSPx64TotalUnfixer.Core
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unnecessary;
                         }
                         incrementProgress?.Invoke();
+                    }
+                    catch (Exception)
+                    {
+                        UnfixingResultsDictionary[dllToUnfix] = UnfixState.Error;
+
+                    }
                     
                 }
             });

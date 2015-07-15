@@ -18,8 +18,24 @@ namespace KSP64TotalUnfixer.Core.Tests
              Directory.Delete(String.Concat(KspTestPath,"\\GameData"), recursive:true);
              Utilities.DirectoryCopy(String.Concat(KspTestPath, "\\GameData_BK"), String.Concat(KspTestPath, "\\GameData"),true);
         }
-       
 
+
+        [TestMethod]
+        public void ModsOnTheWhitelistAreNotUnfixed()
+        {
+            //Arrange
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var unfixerWorker = new UnfixerWorker();
+            
+            //Act 
+            var taskFirtPass = unfixerWorker.StartUnfixing(null);
+            taskFirtPass.Wait();
+            var notProcessedDlls = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.NotProcessed);
+
+            //Assert
+            Assert.AreEqual(UnfixerWorker.WhiteList.Count,notProcessedDlls);
+        }
 
         [TestMethod]
         public void UnfixRoSuccesfully()

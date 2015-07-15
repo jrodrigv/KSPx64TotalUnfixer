@@ -1,0 +1,3 @@
+﻿GCMonitor.dll
+getRSS_x64.dll
+getRSS_x86.dll
