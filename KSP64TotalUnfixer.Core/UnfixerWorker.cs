@@ -52,8 +52,7 @@ namespace KSPx64TotalUnfixer.Core
                     var resolver = new DefaultAssemblyResolver();
                     resolver.AddSearchDirectory(Path.Combine(KspPath, @"KSP_Data\Managed"));
 
-                    try
-                    {
+                   
                         var rParam = new ReaderParameters(ReadingMode.Immediate) {AssemblyResolver = resolver};
 
                         var assembly = AssemblyDefinition.ReadAssembly(dllToUnfix, rParam);
@@ -73,11 +72,7 @@ namespace KSPx64TotalUnfixer.Core
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unnecessary;
                         }
                         incrementProgress?.Invoke();
-                    }
-                    catch (Exception)
-                    {
-                        UnfixingResultsDictionary[dllToUnfix] = UnfixState.Error;
-                    }
+                    
                 }
             });
         }
@@ -154,25 +149,25 @@ namespace KSPx64TotalUnfixer.Core
                     var ilp = md.Body.GetILProcessor();
                     var toReplace = new List<Instruction>();
 
-                    foreach (
-                        var fe in
-                            ilp.Body.Instructions.Where(
-                                fe =>
-                                    (fe.OpCode == OpCodes.Ldc_I8) && 
-                                    (fe.Operand.Equals(9223372036854775807))))
+                    foreach (var fe in ilp.Body.Instructions.Where(
+                        fe =>
+                            (fe.OpCode == OpCodes.Ldc_I8) && 
+                            (fe.Operand.Equals(9223372036854775807)))
+                            .Where(fe => fe.Previous?.OpCode.Name == "call" 
+                            && fe.Previous?.Operand is MethodReference 
+                            && ((MethodReference) fe.Previous.Operand).FullName.Contains("System.IntPtr::ToInt64()")))
                     {
-                        if(fe.Previous.OpCode.Name == "call" && 
-                            ((MethodReference)fe.Previous.Operand).FullName.Contains("System.IntPtr::ToInt64()"))
-                        {
-                             toReplace.Add(fe);
-                             assembly.MainModule.Import(md);
-                             updatedMethod = true;
-                        }
-                       
+                        toReplace.Add(fe);
+                        assembly.MainModule.Import(md);
+                        updatedMethod = true;
                     }
 
                     foreach (var fe in toReplace)
-                        ilp.Replace(fe, Instruction.Create(OpCodes.Ldc_I4_4));
+                    {
+                       
+                        fe.Operand = 1223372036854775807;
+                        ilp.Replace(fe, fe);
+                    }
                 }
 
                 if (!updatedMethod) continue;
