@@ -123,6 +123,12 @@
   <data name="GameData" xml:space="preserve">
     <value>GameData</value>
   </data>
+  <data name="GameData_BK" xml:space="preserve">
+    <value>GameData_BK</value>
+  </data>
+  <data name="KSPDirectory" xml:space="preserve">
+    <value>C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program</value>
+  </data>
   <data name="WhiteList" xml:space="preserve">
     <value>whitelist.txt</value>
   </data>

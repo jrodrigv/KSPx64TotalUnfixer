@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using KSPx64TotalUnfixer.Core;
+using KSPx64TotalUnfixer.Core.Properties;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KSP64TotalUnfixer.Core.Tests
@@ -11,14 +12,52 @@ namespace KSP64TotalUnfixer.Core.Tests
     [TestClass]
     public class UnfixerTests
     {
-        public const string KspTestPath = @"C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program";
+        public static readonly string KspTestPath = @Resources.KSPDirectory;
 
         private void SetupFolders()
         {
-             Directory.Delete(String.Concat(KspTestPath,"\\GameData"), recursive:true);
-             Utilities.DirectoryCopy(String.Concat(KspTestPath, "\\GameData_BK"), String.Concat(KspTestPath, "\\GameData"),true);
+            if (Directory.Exists(Path.Combine(KspTestPath, Resources.GameData)))
+            {
+                Directory.Delete(Path.Combine(KspTestPath, Resources.GameData), recursive:true);
+            }
+             Utilities.DirectoryCopy(Path.Combine(KspTestPath, Resources.GameData_BK), Path.Combine(KspTestPath, Resources.GameData), true);
         }
 
+        [TestMethod]
+        public void UpdateWhiteList()
+        {
+            //Arrange
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var unfixerWorker = new UnfixerWorker();
+
+            //Act 
+            var taskFirtPass = unfixerWorker.StartUnfixing(null);
+            taskFirtPass.Wait();
+            var errorsDlls = UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.Error);
+
+            using (var file =
+            new System.IO.StreamWriter("whitelist.txt", true))
+            {
+                foreach (var failedDll in errorsDlls)
+                {
+                    file.WriteLine(Path.GetFileName(failedDll.Key));
+                }
+            }
+
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var unfixerWorker2 = new UnfixerWorker();
+            var taskSecondPass = unfixerWorker2.StartUnfixing(null);
+            taskSecondPass.Wait();
+
+            var countErrorsDlls = UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.Error);
+            
+            
+            //Assert
+            Assert.AreEqual(0,countErrorsDlls);
+            File.Copy("whitelist.txt", @"..\..\..\KSP64TotalUnfixer.Core\whitelist.txt",true);
+        }
 
         [TestMethod]
         public void ModsOnTheWhitelistAreNotUnfixed()

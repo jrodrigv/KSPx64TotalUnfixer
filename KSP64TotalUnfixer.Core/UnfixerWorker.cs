@@ -12,8 +12,9 @@ namespace KSPx64TotalUnfixer.Core
     public enum UnfixState
     {
         NotProcessed,
+        WhiteListed,
         Unfixed,
-        Unnecessary,
+        NotUnfixed,
         Error
     }
     public class UnfixerWorker
@@ -37,12 +38,19 @@ namespace KSPx64TotalUnfixer.Core
            
             foreach (var dir in Directory.GetFiles(gameDataPath, Resources.AllDlls, SearchOption.AllDirectories))
             {
-                UnfixingResultsDictionary.Add(dir,UnfixState.NotProcessed);
+                if (WhiteList.Contains(Path.GetFileName(dir)))
+                {
+                    UnfixingResultsDictionary.Add(dir, UnfixState.WhiteListed);
+                }
+                else
+                {
+                     UnfixingResultsDictionary.Add(dir,UnfixState.NotProcessed);
+                }
+               
             }
-
-            foreach (var dir in UnfixingResultsDictionary.Keys.Where( x => !WhiteList.Contains(Path.GetFileName(x))))
+            foreach (var dir in UnfixingResultsDictionary.Where(x => x.Value != UnfixState.WhiteListed))
             {
-                 DllsToUnfixQueue.Enqueue(dir);
+                 DllsToUnfixQueue.Enqueue(dir.Key);
             }   
         }
         public Task StartUnfixing(Action incrementProgress)
@@ -79,7 +87,7 @@ namespace KSPx64TotalUnfixer.Core
                         }
                         else
                         {
-                            UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unnecessary;
+                            UnfixingResultsDictionary[dllToUnfix] = UnfixState.NotUnfixed;
                         }
                         incrementProgress?.Invoke();
                     }

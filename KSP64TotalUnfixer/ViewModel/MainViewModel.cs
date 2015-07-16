@@ -162,12 +162,12 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
                 }
 
             }
-            if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.Unnecessary) > 0)
+            if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.NotUnfixed) > 0)
             {
                 s.AppendLine("--------------------");
-                s.AppendLine("Unnecessary to process DLLs:");
+                s.AppendLine("NOT unfixed DLLs:");
                 s.AppendLine("--------------------");
-                foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.Unnecessary))
+                foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.NotUnfixed))
                 {
                     s.AppendLine(dll.Key);
                 }
