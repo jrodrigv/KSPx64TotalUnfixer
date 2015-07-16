@@ -19,16 +19,18 @@ namespace KSPx64TotalUnfixer.Core
     }
     public class UnfixerWorker
     {
-        public static Queue<String> DllsToUnfixQueue = new Queue<string>(); 
+        public static Queue<string> DllsToUnfixQueue = new Queue<string>(); 
         public static Dictionary<string, UnfixState> UnfixingResultsDictionary = new Dictionary<string, UnfixState>();
         public static string KspPath;
         public static List<string> WhiteList  = new List<string>();
+        public static List<string> BackupDllsList = new List<string>();
 
         public static void Setup(string kspPath)
         {
             DllsToUnfixQueue.Clear();
             UnfixingResultsDictionary.Clear();
             WhiteList.Clear();
+            BackupDllsList.Clear();
 
             WhiteList = Utilities.ReadListFromFile(Resources.WhiteList);
 
@@ -67,8 +69,6 @@ namespace KSPx64TotalUnfixer.Core
                     }
                     try
                     {
-                        
-
                         var resolver = new DefaultAssemblyResolver();
                         resolver.AddSearchDirectory(Path.Combine(KspPath, @"KSP_Data\Managed"));
                         var rParam = new ReaderParameters(ReadingMode.Immediate) { AssemblyResolver = resolver };
@@ -77,11 +77,13 @@ namespace KSPx64TotalUnfixer.Core
 
                         if (ApplyStandardUnfix(assembly))
                         {
+                            CreateBackup(dllToUnfix);
                             assembly.Write(dllToUnfix);
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
                         }
                         else if (ApplyLevel2Unfix(assembly))
                         {
+                            CreateBackup(dllToUnfix);
                             assembly.Write(dllToUnfix);
                             UnfixingResultsDictionary[dllToUnfix] = UnfixState.Unfixed;
                         }
@@ -94,15 +96,19 @@ namespace KSPx64TotalUnfixer.Core
                     catch (Exception)
                     {
                         UnfixingResultsDictionary[dllToUnfix] = UnfixState.Error;
-
-                    }
-                    
+                    }       
                 }
             });
         }
 
+        private static void CreateBackup(string dllpath)
+        {
+            var backupAddress = Path.ChangeExtension(dllpath, "unfixerbk");
+            File.Copy(dllpath, backupAddress,true);
+            BackupDllsList.Add(backupAddress);
+        }
 
-        private bool ApplyStandardUnfix(AssemblyDefinition assembly)
+        private static bool ApplyStandardUnfix(AssemblyDefinition assembly)
         {
             var updatedType = false;
             // Iterate through every single type in the module.
@@ -149,8 +155,7 @@ namespace KSPx64TotalUnfixer.Core
             return updatedType;
         }
 
-
-        private bool ApplyLevel2Unfix(AssemblyDefinition assembly)
+        private static bool ApplyLevel2Unfix(AssemblyDefinition assembly)
         {
             var updatedType = false;
             // Iterate through every single type in the module.

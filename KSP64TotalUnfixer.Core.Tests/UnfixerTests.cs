@@ -23,6 +23,38 @@ namespace KSP64TotalUnfixer.Core.Tests
              Utilities.DirectoryCopy(Path.Combine(KspTestPath, Resources.GameData_BK), Path.Combine(KspTestPath, Resources.GameData), true);
         }
 
+
+        [TestMethod]
+        public void AllUnfixedDllsHaveABackupCreated()
+        {
+            //Arrange
+            SetupFolders();
+            UnfixerWorker.Setup(KspTestPath);
+            var unfixerWorker = new UnfixerWorker();
+            var logicalCores = Environment.ProcessorCount;
+
+
+            //Act 
+            var unfixerWorkers = new UnfixerWorker[logicalCores];
+            var unfixerTasks = new Task[logicalCores];
+
+            
+            for (var i = 0; i < logicalCores; i++)
+            {
+                unfixerWorkers[i] = new UnfixerWorker();
+                unfixerTasks[i] = unfixerWorkers[i].StartUnfixing(null);
+            }
+
+            Task.WaitAll(unfixerTasks);
+            var totalUnfixed = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
+
+            var totalBackups = UnfixerWorker.BackupDllsList.Count();
+
+            Assert.AreEqual(totalBackups,totalUnfixed);
+
+
+        }
+
         [TestMethod]
         public void UpdateWhiteList()
         {
@@ -70,7 +102,7 @@ namespace KSP64TotalUnfixer.Core.Tests
             //Act 
             var taskFirtPass = unfixerWorker.StartUnfixing(null);
             taskFirtPass.Wait();
-            var notProcessedDlls = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.NotProcessed);
+            var notProcessedDlls = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.WhiteListed);
 
             //Assert
             Assert.AreEqual(UnfixerWorker.WhiteList.Count,notProcessedDlls);
