@@ -1,12 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GalaSoft.MvvmLight;
 
 namespace KSPx64TotalUnfixer.UI.ViewModel
 {
-    class ResultsViewModel
+    public class ResultsViewModel : ViewModelBase
     {
+        private string _resultsOutput = string.Empty;
+
+
+        public string ResultsOutput
+        {
+            get { return _resultsOutput; }
+            set { Set(() => ResultsOutput, ref _resultsOutput, value); }
+        }
+
+        public ResultsViewModel()
+        {
+            if (IsInDesignMode)
+            {
+                ResultsOutput = "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt";
+            }
+        }
     }
 }

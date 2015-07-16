@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
+using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Threading;
 using KSPx64TotalUnfixer.Core;
+using KSPx64TotalUnfixer.UI.View;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace KSPx64TotalUnfixer.UI.ViewModel
@@ -115,8 +117,14 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
                 {
                     Task.Run(() => RunUnfixer()).ContinueWith(tsk =>
                     {
-                        MessageBox.Show(GetResultsSummary(), "Process completed");
+                        DispatcherHelper.RunAsync(() =>
+                        {
+                            Messenger.Default.Send(new NotificationMessage(this, "OpenResultsWindow"));
+
+                        });
+                       
                     });
+
                 }
                 else
                 {
@@ -129,7 +137,7 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
             }
         }
 
-        private string GetResultsSummary()
+        public string GetResultsSummary()
         {
             var s = new StringBuilder();
             s.AppendLine("Process completed: enjoy you KSP x64!");

@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using GalaSoft.MvvmLight.Messaging;
+using KSPx64TotalUnfixer.UI.View;
 using KSPx64TotalUnfixer.UI.ViewModel;
 
 namespace KSPx64TotalUnfixer.UI
@@ -15,6 +17,21 @@ namespace KSPx64TotalUnfixer.UI
         {
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
+
+            Messenger.Default.Register<NotificationMessage>(this, (message) =>
+            {
+                var mainViewModel = (ViewModel.MainViewModel) message.Sender;
+                switch (message.Notification)
+                {
+                    case "OpenResultsWindow":
+
+                        
+                        var resultsWindow = new ResultsWindow();
+                        resultsWindow.Show();
+                        Messenger.Default.Send<string>(mainViewModel.GetResultsSummary(), "Results");
+                        break;
+                }
+            });
         }
     }
 }

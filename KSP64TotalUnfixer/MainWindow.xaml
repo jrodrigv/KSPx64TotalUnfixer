@@ -32,7 +32,7 @@
         <TextBlock Margin="10,10,10,10" TextWrapping="Wrap" Text="{Binding Instructions}"  Grid.Row="1" />
         <DockPanel Grid.Row="2" MinWidth="400">
             <TextBox Text="{Binding GameDataPath}" IsEnabled="False" MinWidth="400"></TextBox>
-            <Button Content="Browse" MinWidth="50" Command="{Binding DisplayFolderBrowserDialogCommand}"></Button>
+            <Button Content="Browse" MinWidth="70" Command="{Binding DisplayFolderBrowserDialogCommand}"></Button>
         </DockPanel>
         <Button Grid.Row="3" Content="Unfix" Height="30" Width="100" HorizontalAlignment="Center" Command="{Binding UnfixCommand}"></Button>
         <ProgressBar Grid.Row="4" Value="{Binding FilesProcessed}"  Maximum="{Binding NumberOfDlls}"></ProgressBar>

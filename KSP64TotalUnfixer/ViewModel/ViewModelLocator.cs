@@ -27,6 +27,7 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
             SimpleIoc.Default.Register<MainViewModel>();
+            SimpleIoc.Default.Register<ResultsViewModel>();
         }
 
         /// <summary>
@@ -35,13 +36,9 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance",
             "CA1822:MarkMembersAsStatic",
             Justification = "This non-static member is needed for data binding purposes.")]
-        public MainViewModel Main
-        {
-            get
-            {
-                return ServiceLocator.Current.GetInstance<MainViewModel>();
-            }
-        }
+        public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
+
+        public ResultsViewModel Results => ServiceLocator.Current.GetInstance<ResultsViewModel>();
 
         public static void Cleanup()
         {
