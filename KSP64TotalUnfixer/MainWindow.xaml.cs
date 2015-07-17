@@ -19,13 +19,12 @@ namespace KSPx64TotalUnfixer.UI
             Closing += (s, e) => ViewModelLocator.Cleanup();
 
             Messenger.Default.Register<NotificationMessage>(this, (message) =>
-            {
-                var mainViewModel = (ViewModel.MainViewModel) message.Sender;
+            { 
                 switch (message.Notification)
                 {
                     case "OpenResultsWindow":
 
-                        
+                         var mainViewModel = (ViewModel.MainViewModel) message.Sender;
                         var resultsWindow = new ResultsWindow();
                         resultsWindow.Show();
                         Messenger.Default.Send<string>(mainViewModel.GetResultsSummary(), "Results");

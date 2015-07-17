@@ -48,7 +48,7 @@ namespace KSP64TotalUnfixer.Core.Tests
             Task.WaitAll(unfixerTasks);
             var totalUnfixed = UnfixerWorker.UnfixingResultsDictionary.Values.Count(x => x == UnfixState.Unfixed);
 
-            var totalBackups = UnfixerWorker.BackupDllsList.Count();
+            var totalBackups = UnfixerWorker.GetBackupList(Path.Combine(KspTestPath, Resources.GameData)).Count();
 
             Assert.AreEqual(totalBackups,totalUnfixed);
 

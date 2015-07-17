@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSPx64TotalUnfixer.UI", "KS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSPx64TotalUnfixer.Core", "KSP64TotalUnfixer.Core\KSPx64TotalUnfixer.Core.csproj", "{3FFE5E35-10A1-4218-AB23-8D72C819B9E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSP64TotalUnfixer.Core.Tests", "KSP64TotalUnfixer.Core.Tests\KSP64TotalUnfixer.Core.Tests.csproj", "{B9709318-0556-44C5-BF37-1934A20CDD54}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KSPx64TotalUnfixer.Core.Tests", "KSP64TotalUnfixer.Core.Tests\KSPx64TotalUnfixer.Core.Tests.csproj", "{B9709318-0556-44C5-BF37-1934A20CDD54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -28,6 +28,7 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<ResultsViewModel>();
+            SimpleIoc.Default.Register<RestoreViewModel>();
         }
 
         /// <summary>
@@ -39,6 +40,8 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
         public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
 
         public ResultsViewModel Results => ServiceLocator.Current.GetInstance<ResultsViewModel>();
+
+        public RestoreViewModel Restore => ServiceLocator.Current.GetInstance<RestoreViewModel>();
 
         public static void Cleanup()
         {

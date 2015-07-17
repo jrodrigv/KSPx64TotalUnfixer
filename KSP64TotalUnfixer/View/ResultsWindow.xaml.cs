@@ -15,6 +15,7 @@ namespace KSPx64TotalUnfixer.UI.View
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
             Messenger.Default.Register<string>(this, "Results", x => ((ResultsViewModel) DataContext).ResultsOutput = x);
+
         }
     }
 }

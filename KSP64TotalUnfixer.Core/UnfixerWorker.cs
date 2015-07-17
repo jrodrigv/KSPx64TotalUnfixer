@@ -23,14 +23,14 @@ namespace KSPx64TotalUnfixer.Core
         public static Dictionary<string, UnfixState> UnfixingResultsDictionary = new Dictionary<string, UnfixState>();
         public static string KspPath;
         public static List<string> WhiteList  = new List<string>();
-        public static List<string> BackupDllsList = new List<string>();
+      
 
         public static void Setup(string kspPath)
         {
             DllsToUnfixQueue.Clear();
             UnfixingResultsDictionary.Clear();
             WhiteList.Clear();
-            BackupDllsList.Clear();
+        
 
             WhiteList = Utilities.ReadListFromFile(Resources.WhiteList);
 
@@ -104,10 +104,13 @@ namespace KSPx64TotalUnfixer.Core
         private static void CreateBackup(string dllpath)
         {
             var backupAddress = Path.ChangeExtension(dllpath, "unfixerbk");
-            File.Copy(dllpath, backupAddress,true);
-            BackupDllsList.Add(backupAddress);
+            File.Copy(dllpath, backupAddress,true);    
         }
 
+        public static List<string> GetBackupList(string path)
+        {
+            return Directory.GetFiles(path, "*.unfixerbk", SearchOption.AllDirectories).ToList();
+        }
         private static bool ApplyStandardUnfix(AssemblyDefinition assembly)
         {
             var updatedType = false;

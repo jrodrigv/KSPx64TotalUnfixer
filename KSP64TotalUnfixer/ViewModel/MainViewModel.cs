@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ using GalaSoft.MvvmLight.CommandWpf;
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Threading;
 using KSPx64TotalUnfixer.Core;
+using KSPx64TotalUnfixer.Core.Properties;
 using KSPx64TotalUnfixer.UI.View;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
@@ -57,6 +59,9 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
 
         public static string Instructions => "Please select the GAMEDATA folder that you want to enable for x64 (WARNING: take a backup first)";
 
+        public RelayCommand RestoreCommand { get; set; }
+
+
 
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
@@ -65,7 +70,7 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
         {
             if (IsInDesignMode)
             {
-                _gameDataPath = "C:\\Gamedata";
+                _gameDataPath = Path.Combine(Resources.KSPDirectory,Resources.GameData);
                 _filesProcessed = 50;
                 _numberOfDlls = 100;
             }
@@ -74,6 +79,14 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
             DisplayFolderBrowserDialogCommand = new RelayCommand(DisplayFolderBrowserDialog, () => true);
             UnfixCommand = new RelayCommand(UnfixerRunAsyncTask,
                 () => (_gameDataPath != string.Empty));
+            RestoreCommand = new RelayCommand(DisplayRestoreWindow, () => (_gameDataPath != string.Empty && UnfixerWorker.GetBackupList(_gameDataPath).Count > 0));
+        }
+
+        private void  DisplayRestoreWindow()
+        {
+            var restoreWindow = new RestoreWindow();
+            restoreWindow.Show();
+            Messenger.Default.Send<List<string>>(UnfixerWorker.GetBackupList(_gameDataPath), "Restore");
         }
 
         private void RunUnfixer()
@@ -141,34 +154,35 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
         {
             var s = new StringBuilder();
             s.AppendLine("Process completed: enjoy you KSP x64!");
-            s.AppendLine("");
-            s.AppendLine("Unfixed DLLs:");
-            s.AppendLine("--------------------");
-            foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.Unfixed))
+            if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.Unfixed) > 0)
             {
-                s.AppendLine(dll.Key);
-            }
-            if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.NotProcessed) > 0)
-            {
+                s.AppendLine("");
+                s.AppendLine("Unfixed DLLs:");
                 s.AppendLine("--------------------");
-                s.AppendLine("Not Processed DLLs:");
-                s.AppendLine("--------------------");
-                foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.NotProcessed))
+                foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.Unfixed))
                 {
                     s.AppendLine(dll.Key);
                 }
-                    
+            }
+            if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.WhiteListed) > 0)
+            {
+                s.AppendLine("--------------------");
+                s.AppendLine("Whitelisted DLLs:");
+                s.AppendLine("--------------------");
+                foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.WhiteListed))
+                {
+                    s.AppendLine(dll.Key);
+                }       
             }
             if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.Error) > 0)
             {
                 s.AppendLine("--------------------");
-                s.AppendLine("Errors on DLLs:");
+                s.AppendLine("Failed to process DLLs:");
                 s.AppendLine("--------------------");
                 foreach (var dll in UnfixerWorker.UnfixingResultsDictionary.Where(x => x.Value == UnfixState.Error))
                 {
                     s.AppendLine(dll.Key);
                 }
-
             }
             if (UnfixerWorker.UnfixingResultsDictionary.Count(x => x.Value == UnfixState.NotUnfixed) > 0)
             {
@@ -179,7 +193,6 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
                 {
                     s.AppendLine(dll.Key);
                 }
-
             }
             s.AppendLine("--------------------");
 
