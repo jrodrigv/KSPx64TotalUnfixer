@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using GalaSoft.MvvmLight;
@@ -69,6 +67,7 @@ namespace KSPx64TotalUnfixer.UI.ViewModel
 
         public void LoadRestoreList(List<string> list)
         {
+            _dllsToRestore.Clear();
             foreach (var dlldir in list)
             {
                 _dllsToRestore.Add( new RestoreItem() { IsChecked = true, Dir = dlldir });
