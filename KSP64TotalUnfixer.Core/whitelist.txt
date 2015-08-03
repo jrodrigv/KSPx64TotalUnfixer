@@ -2,3 +2,4 @@
 getRSS_x86.dll
 GCMonitor.dll
 ContractConfigurator.dll
+ModuleManager

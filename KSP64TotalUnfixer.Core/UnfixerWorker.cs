@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using KSPx64TotalUnfixer.Core.Properties;
 using Mono.Cecil;
@@ -40,7 +41,8 @@ namespace KSPx64TotalUnfixer.Core
            
             foreach (var dir in Directory.GetFiles(gameDataPath, Resources.AllDlls, SearchOption.AllDirectories))
             {
-                if (WhiteList.Contains(Path.GetFileName(dir)))
+
+                if (WhiteList.Any(x => Path.GetFileName(dir).Contains(x)))
                 {
                     UnfixingResultsDictionary.Add(dir, UnfixState.WhiteListed);
                 }
